@@ -1,3 +1,31 @@
-[gd_scene format=3 uid="uid://car6ngevdpvxx"]
+[gd_scene load_steps=5 format=3 uid="uid://car6ngevdpvxx"]
+
+[ext_resource type="Texture2D" uid="uid://dlxy1bkj1jfh3" path="res://sprites/Tiles.png" id="1_cdt87"]
+[ext_resource type="Script" path="res://scripts/board.gd" id="2_s0iol"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wrl4i"]
+texture = ExtResource("1_cdt87")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_spknu"]
+sources/0 = SubResource("TileSetAtlasSource_wrl4i")
 
 [node name="game" type="Node2D"]
+
+[node name="board" type="TileMapLayer" parent="."]
+scale = Vector2(4, 4)
+tile_set = SubResource("TileSet_spknu")
+script = ExtResource("2_s0iol")
