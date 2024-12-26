@@ -21,27 +21,43 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("reveal"):
 		var cursor_coords : Vector2i = local_to_map(get_local_mouse_position())
-		
-		if(first_move):
-			var curr_tile_val = set_tile(cursor_coords)
-			while not curr_tile_val == -1:
-				tiles.shuffle()
-				curr_tile_val = set_tile(cursor_coords)
-			first_move = false
-		reveal_tile(cursor_coords)
-		
-		#print(tiles[get_tile_index(cursor_coords)] == 0)
-		#print(get_surrounding_tiles(cursor_coords))
+		var curr_atlas_coords = get_cell_atlas_coords(cursor_coords)
+		if curr_atlas_coords == Vector2i(0,0):
+			if(first_move):
+				var curr_tile_val = set_tile(cursor_coords)
+				while not curr_tile_val == -1:
+					tiles.shuffle()
+					curr_tile_val = set_tile(cursor_coords)
+				first_move = false
+				set_tiles()
+			reveal_tile(cursor_coords)
+			if tiles[get_tile_index(cursor_coords)] == 0:
+				set_cell(cursor_coords, 0, Vector2i(0,3))
+				reveal_all_tiles()
+		elif not curr_atlas_coords == Vector2i(1,0) and not curr_atlas_coords == Vector2i(3,0):
+			var reveal_tiles : Array[Vector2i]
+			var numFlags = 0
+			for i in get_surrounding_tiles(cursor_coords):
+				if get_cell_atlas_coords(i) == Vector2i(1,0):
+					numFlags += 1
+				reveal_tiles.append(i)
+			if numFlags == tiles[get_tile_index(cursor_coords)]:
+				reveal_surrounding_tiles(reveal_tiles)
 
 	if event.is_action_pressed("flag"):
 		var cursor_coords : Vector2i = local_to_map(get_local_mouse_position())
-		set_cell(cursor_coords, 0, Vector2i(1,0))
+		var curr_atlas_coords = get_cell_atlas_coords(cursor_coords)
+		if curr_atlas_coords == Vector2i(0,0):
+			set_cell(cursor_coords, 0, Vector2i(1,0))
+		elif curr_atlas_coords == Vector2i(1,0):
+			set_cell(cursor_coords, 0, Vector2i(0,0))
+
 	if event.is_action_pressed("reveal all"):
+		if(first_move):
+			set_tiles()
 		var numMines = 0
 		for y in HEIGHT:
 			for x in WIDTH:
-				reveal_tile(Vector2i(x,y))
-				
 				if tiles[get_tile_index(Vector2i(x,y))] == 0:
 					numMines += 1
 		if numMines == NUM_MINES:
@@ -49,11 +65,17 @@ func _input(event: InputEvent) -> void:
 		else:
 			print("expected : " + str(NUM_MINES))
 			print("actual : " + str(numMines))
-		
+		reveal_all_tiles()
+
 	if event.is_action_pressed("reset"):
 		tiles.clear()
 		set_up_board()
 		first_move = true
+
+func set_tiles()->void:
+	for y in HEIGHT:
+		for x in WIDTH:
+			set_tile(Vector2i(x,y))
 
 
 func set_up_board()->void:
@@ -64,28 +86,42 @@ func set_up_board()->void:
 	for i in range(NUM_MINES):
 		tiles[i] = 0
 	tiles.shuffle()
+	
+func reveal_all_tiles()->void:
+	for y in HEIGHT:
+		for x in WIDTH:
+			reveal_tile(Vector2i(x,y))
 
 
 func reveal_tile(tile_coords : Vector2i)->void:
-	var curr_tile_val = set_tile(tile_coords)
+	var tile_value := tiles[get_tile_index(tile_coords)]
+	var tile_atlas_coords := get_cell_atlas_coords(tile_coords)
 	
-	match curr_tile_val:
-		-1: 
-			set_cell(tile_coords, 0, Vector2i(3,0))
-			reveal_surrounding_tiles(tile_coords)
-		0: set_cell(tile_coords, 0, Vector2i(0,3))
-		1: set_cell(tile_coords, 0, Vector2i(0,1))
-		2: set_cell(tile_coords, 0, Vector2i(1,1))
-		3: set_cell(tile_coords, 0, Vector2i(2,1))
-		4: set_cell(tile_coords, 0, Vector2i(3,1))
-		5: set_cell(tile_coords, 0, Vector2i(0,2))
-		6: set_cell(tile_coords, 0, Vector2i(1,2))
-		7: set_cell(tile_coords, 0, Vector2i(2,2))
-		8: set_cell(tile_coords, 0, Vector2i(3,2))
+	if tile_atlas_coords == Vector2i(1,0) and not tile_value == 0:
+		print("hello")
+		set_cell(tile_coords, 0, Vector2i(1,3))
+		return
+	
+	if tile_atlas_coords == Vector2i(0,0):
+		match tile_value:
+			-1: 
+				set_cell(tile_coords, 0, Vector2i(3,0))
+				reveal_surrounding_tiles(get_surrounding_tiles(tile_coords))
+			0: set_cell(tile_coords, 0, Vector2i(2,0))
+			1: set_cell(tile_coords, 0, Vector2i(0,1))
+			2: set_cell(tile_coords, 0, Vector2i(1,1))
+			3: set_cell(tile_coords, 0, Vector2i(2,1))
+			4: set_cell(tile_coords, 0, Vector2i(3,1))
+			5: set_cell(tile_coords, 0, Vector2i(0,2))
+			6: set_cell(tile_coords, 0, Vector2i(1,2))
+			7: set_cell(tile_coords, 0, Vector2i(2,2))
+			8: set_cell(tile_coords, 0, Vector2i(3,2))
 
-
-func reveal_surrounding_tiles(tile_coords : Vector2i) -> void:
-	for i in get_surrounding_tiles(tile_coords):
+func reveal_surrounding_tiles(surrounding_tiles : Array[Vector2i]) -> void:
+	for i in surrounding_tiles:
+		if tiles[get_tile_index(i)] == 0:
+			reveal_all_tiles()
+			return
 		var curr_atlas_coords = get_cell_atlas_coords(i)
 		if curr_atlas_coords == Vector2i(0,0):
 			reveal_tile(i)

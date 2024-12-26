@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://car6ngevdpvxx"]
+[gd_scene load_steps=6 format=3 uid="uid://car6ngevdpvxx"]
 
 [ext_resource type="Texture2D" uid="uid://dlxy1bkj1jfh3" path="res://sprites/Tiles.png" id="1_cdt87"]
 [ext_resource type="Script" path="res://scripts/board.gd" id="2_s0iol"]
+[ext_resource type="PackedScene" uid="uid://2mx61l48fdw7" path="res://scenes/ui_screen.tscn" id="3_48252"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wrl4i"]
 texture = ExtResource("1_cdt87")
@@ -29,3 +30,7 @@ sources/0 = SubResource("TileSetAtlasSource_wrl4i")
 scale = Vector2(4, 4)
 tile_set = SubResource("TileSet_spknu")
 script = ExtResource("2_s0iol")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="UI_Screen" parent="CanvasLayer" instance=ExtResource("3_48252")]
