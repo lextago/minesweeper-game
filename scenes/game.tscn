@@ -27,6 +27,7 @@ sources/0 = SubResource("TileSetAtlasSource_wrl4i")
 [node name="game" type="Node2D"]
 
 [node name="board" type="TileMapLayer" parent="."]
+texture_filter = 1
 scale = Vector2(4, 4)
 tile_set = SubResource("TileSet_spknu")
 script = ExtResource("2_s0iol")

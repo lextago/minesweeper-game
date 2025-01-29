@@ -9,6 +9,7 @@ const NUM_MINES := 99
 # 1-8 : num mines
 var tiles : Array[int]
 var first_move = true
+var game_over = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -19,6 +20,15 @@ func _process(delta: float) -> void:
 	pass
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("reset"):
+		tiles.clear()
+		set_up_board()
+		first_move = true
+		game_over = false
+	
+	if game_over:
+		return
+	
 	if event.is_action_pressed("reveal"):
 		var cursor_coords : Vector2i = local_to_map(get_local_mouse_position())
 		var curr_atlas_coords = get_cell_atlas_coords(cursor_coords)
@@ -33,7 +43,7 @@ func _input(event: InputEvent) -> void:
 			reveal_tile(cursor_coords)
 			if tiles[get_tile_index(cursor_coords)] == 0:
 				set_cell(cursor_coords, 0, Vector2i(0,3))
-				reveal_all_tiles()
+				end_game()
 		elif not curr_atlas_coords == Vector2i(1,0) and not curr_atlas_coords == Vector2i(3,0):
 			var reveal_tiles : Array[Vector2i]
 			var numFlags = 0
@@ -55,22 +65,23 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("reveal all"):
 		if(first_move):
 			set_tiles()
-		var numMines = 0
-		for y in HEIGHT:
-			for x in WIDTH:
-				if tiles[get_tile_index(Vector2i(x,y))] == 0:
-					numMines += 1
-		if numMines == NUM_MINES:
-			print(true)
-		else:
-			print("expected : " + str(NUM_MINES))
-			print("actual : " + str(numMines))
-		reveal_all_tiles()
+		end_game()
 
-	if event.is_action_pressed("reset"):
-		tiles.clear()
-		set_up_board()
-		first_move = true
+
+func end_game()->void:
+	game_over = true
+	var numMines = 0
+	for y in HEIGHT:
+		for x in WIDTH:
+			reveal_tile(Vector2i(x,y))
+			if tiles[get_tile_index(Vector2i(x,y))] == 0:
+					numMines += 1
+	if numMines == NUM_MINES:
+		print(true)
+	else:
+		print("expected : " + str(NUM_MINES))
+		print("actual : " + str(numMines))
+
 
 func set_tiles()->void:
 	for y in HEIGHT:
@@ -86,11 +97,6 @@ func set_up_board()->void:
 	for i in range(NUM_MINES):
 		tiles[i] = 0
 	tiles.shuffle()
-	
-func reveal_all_tiles()->void:
-	for y in HEIGHT:
-		for x in WIDTH:
-			reveal_tile(Vector2i(x,y))
 
 
 func reveal_tile(tile_coords : Vector2i)->void:
@@ -98,7 +104,6 @@ func reveal_tile(tile_coords : Vector2i)->void:
 	var tile_atlas_coords := get_cell_atlas_coords(tile_coords)
 	
 	if tile_atlas_coords == Vector2i(1,0) and not tile_value == 0:
-		print("hello")
 		set_cell(tile_coords, 0, Vector2i(1,3))
 		return
 	
@@ -117,10 +122,12 @@ func reveal_tile(tile_coords : Vector2i)->void:
 			7: set_cell(tile_coords, 0, Vector2i(2,2))
 			8: set_cell(tile_coords, 0, Vector2i(3,2))
 
+
 func reveal_surrounding_tiles(surrounding_tiles : Array[Vector2i]) -> void:
 	for i in surrounding_tiles:
-		if tiles[get_tile_index(i)] == 0:
-			reveal_all_tiles()
+		if get_cell_atlas_coords(i) == Vector2i(0,0) and tiles[get_tile_index(i)] == 0:
+			set_cell(i, 0, Vector2i(0,3))
+			end_game()
 			return
 		var curr_atlas_coords = get_cell_atlas_coords(i)
 		if curr_atlas_coords == Vector2i(0,0):
